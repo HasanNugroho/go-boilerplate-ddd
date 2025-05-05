@@ -74,11 +74,31 @@ func (r *RoleRepository) FindAll(ctx context.Context, filter *model.PaginationFi
 }
 
 func (r *RoleRepository) Update(ctx context.Context, id string, role *account.Role) (err error) {
-	panic("not implemented") // TODO: Implement
+	result := r.db.WithContext(ctx).Save(role)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("role with ID '%s' not found: %w", role.ID, errs.ErrNotFound)
+		}
+		return fmt.Errorf("failed to update role: %w", result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("role with ID '%s' not found: %w", role.ID, errs.ErrNotFound)
+	}
+	return nil
 }
 
 func (r *RoleRepository) Delete(ctx context.Context, id string) (err error) {
-	panic("not implemented") // TODO: Implement
+	result := r.db.WithContext(ctx).Where("id", id).Delete(&account.Role{})
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("role with ID '%s' not found: %w", id, errs.ErrNotFound)
+		}
+		return fmt.Errorf("failed to delete role: %w", result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("role with ID '%s' not found: %w", id, errs.ErrNotFound)
+	}
+	return nil
 }
 
 func (r *RoleRepository) AssignUser(ctx context.Context, userId string, roleId string) (err error) {
